@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SignBridge – Live Sign Language Communication</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f9f9f9;
+    --surface: #ffffff;
+    --border: #e8e8e8;
+    --text: #111;
+    --muted: #888;
+    --accent: #2563eb;
+    --accent-light: #eff3ff;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --red: #dc2626;
+    --radius: 14px;
+    --shadow: 0 2px 16px rgba(0,0,0,0.07);
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── LANDING ── */
+  #landing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 0;
+    padding: 32px 16px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .logo-text {
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+  }
+  .logo-text span { color: var(--accent); }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 15px;
+    margin-bottom: 40px;
+    text-align: center;
+  }
+
+  .landing-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 36px 32px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .role-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .role-btn {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    padding: 14px 10px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  .role-btn .r-icon { font-size: 26px; }
+  .role-btn .r-name { font-size: 13px; font-weight: 600; }
+  .role-btn .r-desc { font-size: 11px; color: var(--muted); }
+  .role-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+  .role-btn:hover:not(.active) { border-color: #ccc; background: #fafafa; }
+
+  .input-group { display: flex; flex-direction: column; gap: 6px; }
+
+  input[type="text"] {
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+    background: var(--surface);
+    color: var(--text);
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { letter-spacing: 1px; text-transform: none; color: #bbb; font-size: 14px; }
+
+  .divider { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: 12px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 13px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    width: 100%;
+  }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    width: 100%;
+  }
+  .btn-outline:hover { background: var(--accent-light); }
+
+  /* ── ROOM ── */
+  #room {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo { font-weight: 600; font-size: 17px; }
+  .topbar-logo span { color: var(--accent); }
+
+  .room-code-badge {
+    background: var(--accent-light);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 4px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    cursor: pointer;
+    user-select: all;
+    position: relative;
+  }
+
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    display: inline-block;
+    margin-right: 6px;
+    transition: background 0.3s;
+  }
+  .status-dot.connected { background: var(--green); box-shadow: 0 0 0 3px #bbf7d0; }
+  .status-dot.waiting { background: #f59e0b; box-shadow: 0 0 0 3px #fef3c7; animation: pulse 1.5s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+  }
+
+  .status-text { font-size: 13px; color: var(--muted); }
+
+  .topbar-right { display: flex; gap: 8px; }
+
+  .icon-btn {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--bg); }
+  .icon-btn.danger { border-color: #fecaca; background: #fff5f5; color: var(--red); }
+  .icon-btn.danger:hover { background: #fee2e2; }
+  .icon-btn.active-btn { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* Video grid */
+  .video-area {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 12px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  .video-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    z-index: 2;
+    flex-shrink: 0;
+  }
+  .panel-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 600;
+  }
+  .panel-tag {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+  .panel-tag.green { background: var(--green-light); color: var(--green); }
+
+  .video-container {
+    flex: 1;
+    position: relative;
+    background: #1a1a1a;
+    overflow: hidden;
+  }
+
+  video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #555;
+    font-size: 13px;
+  }
+  .video-placeholder .ph-icon { font-size: 40px; }
+
+  /* Caption bar */
+  .caption-bar {
+    padding: 10px 14px;
+    border-top: 1px solid var(--border);
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .caption-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .caption-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+    min-height: 20px;
+  }
+  .caption-text.listening {
+    color: var(--accent);
+  }
+  .caption-text .typing-cursor {
+    display: inline-block;
+    width: 2px; height: 14px;
+    background: var(--accent);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* Sign detection overlay */
+  .sign-overlay {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(6px);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .sign-badge {
+    background: var(--accent);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .sign-detected-text {
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    flex: 1;
+  }
+  .sign-confidence {
+    color: #aaa;
+    font-size: 11px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Bottom controls */
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .ctrl-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 22px;
+    transition: all 0.15s;
+    min-width: 64px;
+  }
+  .ctrl-btn span { font-size: 10px; color: var(--muted); font-weight: 500; }
+  .ctrl-btn:hover { background: var(--bg); }
+  .ctrl-btn.off { background: #fee2e2; border-color: #fecaca; }
+  .ctrl-btn.off span { color: var(--red); }
+  .ctrl-btn.recording { background: #fee2e2; border-color: var(--red); animation: pulse 1.2s infinite; }
+  .ctrl-btn.recording span { color: var(--red); }
+
+  .end-btn {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .end-btn:hover { background: #b91c1c; }
+
+  /* Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: #222;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  #toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* Copy overlay */
+  .copy-hint {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    padding: 0 0 4px;
+    cursor: default;
+    display: flex; align-items: center; justify-content: center; gap: 4px;
+  }
+
+  /* Connection waiting overlay */
+  .waiting-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(249,249,249,0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    z-index: 5;
+    border-radius: var(--radius);
+  }
+  .waiting-spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .waiting-overlay p { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .waiting-overlay .room-share {
+    background: var(--accent-light);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    letter-spacing: 4px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+
+  /* Mic waveform */
+  .mic-wave {
+    display: flex; align-items: center; gap: 2px;
+    height: 18px;
+  }
+  .mic-wave .bar {
+    width: 3px;
+    background: var(--accent);
+    border-radius: 2px;
+    animation: wave 0.8s ease-in-out infinite;
+  }
+  .mic-wave .bar:nth-child(1) { animation-delay: 0s; }
+  .mic-wave .bar:nth-child(2) { animation-delay: 0.15s; }
+  .mic-wave .bar:nth-child(3) { animation-delay: 0.3s; }
+  .mic-wave .bar:nth-child(4) { animation-delay: 0.15s; }
+  .mic-wave .bar:nth-child(5) { animation-delay: 0s; }
+  @keyframes wave {
+    0%, 100% { height: 4px; }
+    50% { height: 16px; }
+  }
+
+  @media (max-width: 700px) {
+    .video-area { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="landing">
+  <div class="logo">
+    <div class="logo-icon">🤟</div>
+    <div class="logo-text">Sign<span>Bridge</span></div>
+  </div>
+  <p class="tagline">Live sign language communication — bridging every conversation</p>
+
+  <div class="landing-card">
+    <div>
+      <div class="section-label">Your Role</div>
+      <div class="role-selector" style="margin-top:8px">
+        <button class="role-btn active" id="roleSignerBtn" onclick="selectRole('signer')">
+          <div class="r-icon">🤟</div>
+          <div class="r-name">Signer</div>
+          <div class="r-desc">I use sign language</div>
+        </button>
+        <button class="role-btn" id="roleListenerBtn" onclick="selectRole('listener')">
+          <div class="r-icon">🗣️</div>
+          <div class="r-name">Listener</div>
+          <div class="r-desc">I speak & listen</div>
+        </button>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="createRoom()">✦ Create New Room</button>
+
+    <div class="divider">or join existing</div>
+
+    <div class="input-group">
+      <div class="section-label">Room Code</div>
+      <input type="text" id="roomCodeInput" maxlength="6" placeholder="Enter 6-letter code" oninput="this.value=this.value.toUpperCase()" />
+    </div>
+
+    <button class="btn-outline" onclick="joinRoom()">Join Room →</button>
+  </div>
+</div>
+
+<!-- ROOM -->
+<div id="room">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Sign<span>Bridge</span></div>
+      <div class="room-code-badge" id="topRoomCode" onclick="copyRoomCode()" title="Click to copy">——</div>
+      <div class="copy-hint" id="copyHint">📋 click to copy</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="status-dot waiting" id="statusDot"></span>
+      <span class="status-text" id="statusText">Waiting for peer…</span>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn danger" onclick="leaveRoom()" title="Leave">✕</button>
+    </div>
+  </div>
+
+  <div class="video-area">
+    <!-- Signer Panel -->
+    <div class="video-panel" id="signerPanel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🤟</span>
+          <span id="signerPanelName">Signer</span>
+          <span class="panel-tag" id="signerYouTag" style="display:none">You</span>
+        </div>
+        <div style="font-size:12px;color:var(--muted)" id="signDetectStatus">Sign detection active</div>
+      </div>
+      <div class="video-container">
+        <video id="signerVideo" autoplay playsinline muted></video>
+        <div class="video-placeholder" id="signerPlaceholder">
+          <div class="ph-icon">🤟</div>
+          <div>Waiting for signer…</div>
+        </div>
+        <!-- Sign detection overlay -->
+        <div class="sign-overlay" id="signOverlay" style="display:none">
+          <span class="sign-badge">Detected</span>
+          <span class="sign-detected-text" id="signDetectedText">—</span>
+          <span class="sign-confidence" id="signConfidence">—%</span>
+        </div>
+      </div>
+      <div class="caption-bar">
+        <span class="caption-label">Sign→Text</span>
+        <div class="caption-text" id="signerCaption">Sign language translation will appear here…</div>
+      </div>
+    </div>
+
+    <!-- Listener Panel -->
+    <div class="video-panel" id="listenerPanel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🗣️</span>
+          <span id="listenerPanelName">Listener</span>
+          <span class="panel-tag green" id="listenerYouTag" style="display:none">You</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)" id="speechStatus">
+          <span id="speechStatusText">Speech recognition ready</span>
+        </div>
+      </div>
+      <div class="video-container">
+        <video id="listenerVideo" autoplay playsinline muted></video>
+        <div class="video-placeholder" id="listenerPlaceholder">
+          <div class="ph-icon">🗣️</div>
+          <div>Waiting for listener…</div>
+        </div>
+      </div>
+      <div class="caption-bar">
+        <span class="caption-label">Speech→Text</span>
+        <div class="caption-text" id="listenerCaption">Speech transcription will appear here…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="ctrl-btn" id="micBtn" onclick="toggleMic()">🎙️<span>Mic</span></button>
+    <button class="ctrl-btn" id="camBtn" onclick="toggleCam()">📷<span>Camera</span></button>
+    <button class="ctrl-btn" id="speechBtn" onclick="toggleSpeech()" style="display:none">🎤<span>Speech</span></button>
+    <button class="ctrl-btn" id="signBtn" onclick="toggleSignDetection()" style="display:none">🤟<span>Detect</span></button>
+    <button class="end-btn" onclick="leaveRoom()">📞 End Call</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const SIGNALING_SERVER = 'https://webrtc-server-rhu8.onrender.com';
+
+let myRole = 'signer';
+let roomCode = '';
+let localStream = null;
+let peerConnection = null;
+let socket = null;
+let micOn = true, camOn = true;
+let speechRecog = null;
+let speechActive = false;
+let signDetectionActive = false;
+let signDetectionInterval = null;
+let isConnected = false;
+let pendingCandidates = [];
+
+// ── ROLE SELECT ──
+function selectRole(role) {
+  myRole = role;
+  document.getElementById('roleSignerBtn').classList.toggle('active', role === 'signer');
+  document.getElementById('roleListenerBtn').classList.toggle('active', role === 'listener');
+}
+
+// ── ROOM CODE GEN ──
+function genCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({length: 6}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function createRoom() {
+  roomCode = genCode();
+  enterRoom();
+}
+
+function joinRoom() {
+  const code = document.getElementById('roomCodeInput').value.trim().toUpperCase();
+  if (code.length !== 6) { showToast('Enter a valid 6-character room code'); return; }
+  roomCode = code;
+  enterRoom();
+}
+
+// ── ENTER ROOM ──
+async function enterRoom() {
+  document.getElementById('landing').style.display = 'none';
+  document.getElementById('room').style.display = 'flex';
+  document.getElementById('topRoomCode').textContent = roomCode;
+
+  // Show YOU tag
+  if (myRole === 'signer') {
+    document.getElementById('signerYouTag').style.display = '';
+    document.getElementById('signBtn').style.display = '';
+  } else {
+    document.getElementById('listenerYouTag').style.display = '';
+    document.getElementById('speechBtn').style.display = '';
+  }
+
+  // Get media
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    // Assign local stream to my panel
+    if (myRole === 'signer') {
+      const v = document.getElementById('signerVideo');
+      v.srcObject = localStream;
+      v.muted = true;
+      document.getElementById('signerPlaceholder').style.display = 'none';
+    } else {
+      const v = document.getElementById('listenerVideo');
+      v.srcObject = localStream;
+      v.muted = true;
+      document.getElementById('listenerPlaceholder').style.display = 'none';
+    }
+  } catch(e) {
+    showToast('Camera/mic permission denied');
+    console.error(e);
+  }
+
+  // Start role-specific features
+  if (myRole === 'listener') {
+    initSpeechRecognition();
+  } else {
+    // signer: start sign detection simulation
+    startSignDetection();
+  }
+
+  connectSignaling();
+}
+
+// ── SIGNALING ──
+function connectSignaling() {
+  // Use WebSocket for signaling
+  const wsUrl = SIGNALING_SERVER.replace('https://', 'wss://').replace('http://', 'ws://');
+  try {
+    socket = new WebSocket(wsUrl + '/ws?room=' + roomCode + '&role=' + myRole);
+
+    socket.onopen = () => {
+      console.log('Signaling connected');
+      socket.send(JSON.stringify({ type: 'join', room: roomCode, role: myRole }));
+    };
+
+    socket.onmessage = async (event) => {
+      let msg;
+      try { msg = JSON.parse(event.data); } catch(e) { return; }
+      await handleSignaling(msg);
+    };
+
+    socket.onerror = (e) => {
+      console.warn('WS error, falling back to polling:', e);
+      socket = null;
+      connectPolling();
+    };
+
+    socket.onclose = () => {
+      if (!isConnected) connectPolling();
+    };
+  } catch(e) {
+    connectPolling();
+  }
+}
+
+// HTTP polling fallback
+let pollInterval = null;
+async function connectPolling() {
+  // Register with server
+  try {
+    await fetch(SIGNALING_SERVER + '/join', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ room: roomCode, role: myRole })
+    });
+  } catch(e) {}
+
+  pollInterval = setInterval(pollMessages, 1500);
+  // Initiate offer if signer
+  if (myRole === 'signer') {
+    setTimeout(() => initiateCall(), 2000);
+  }
+}
+
+async function pollMessages() {
+  try {
+    const r = await fetch(SIGNALING_SERVER + '/poll?room=' + roomCode + '&role=' + myRole);
+    if (!r.ok) return;
+    const msgs = await r.json();
+    if (Array.isArray(msgs)) {
+      for (const msg of msgs) await handleSignaling(msg);
+    }
+  } catch(e) {}
+}
+
+async function sendSignal(data) {
+  const payload = { ...data, room: roomCode, role: myRole };
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify(payload));
+  } else {
+    try {
+      await fetch(SIGNALING_SERVER + '/signal', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+    } catch(e) { console.warn('Signal send failed:', e); }
+  }
+}
+
+async function handleSignaling(msg) {
+  if (msg.type === 'peer_joined') {
+    updateStatus(true);
+    if (myRole === 'signer') {
+      await initiateCall();
+    }
+  }
+
+  if (msg.type === 'offer') {
+    if (!peerConnection) setupPeerConnection();
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(msg));
+    // Add pending candidates
+    for (const c of pendingCandidates) {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(c)).catch(()=>{});
+    }
+    pendingCandidates = [];
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+    await sendSignal({ type: 'answer', sdp: answer.sdp });
+  }
+
+  if (msg.type === 'answer') {
+    if (peerConnection && peerConnection.signalingState !== 'stable') {
+      await peerConnection.setRemoteDescription(new RTCSessionDescription(msg));
+    }
+  }
+
+  if (msg.type === 'candidate') {
+    if (peerConnection && peerConnection.remoteDescription) {
+      await peerConnection.addIceCandidate(new RTCIceCandidate(msg.candidate)).catch(()=>{});
+    } else {
+      pendingCandidates.push(msg.candidate);
+    }
+  }
+
+  if (msg.type === 'caption') {
+    // Receive caption from peer
+    if (msg.captionType === 'speech' && myRole === 'signer') {
+      displayCaption('listener', msg.text, false);
+    }
+    if (msg.captionType === 'sign' && myRole === 'listener') {
+      displayCaption('signer', msg.text, false);
+    }
+  }
+}
+
+// ── WebRTC ──
+function setupPeerConnection() {
+  const config = {
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' }
+    ]
+  };
+  peerConnection = new RTCPeerConnection(config);
+
+  if (localStream) {
+    localStream.getTracks().forEach(t => peerConnection.addTrack(t, localStream));
+  }
+
+  peerConnection.ontrack = (event) => {
+    const remoteStream = event.streams[0];
+    // Assign to the OTHER person's panel
+    if (myRole === 'signer') {
+      const v = document.getElementById('listenerVideo');
+      v.srcObject = remoteStream;
+      v.muted = false;
+      document.getElementById('listenerPlaceholder').style.display = 'none';
+    } else {
+      const v = document.getElementById('signerVideo');
+      v.srcObject = remoteStream;
+      v.muted = false;
+      document.getElementById('signerPlaceholder').style.display = 'none';
+    }
+    updateStatus(true);
+  };
+
+  peerConnection.onicecandidate = (e) => {
+    if (e.candidate) {
+      sendSignal({ type: 'candidate', candidate: e.candidate });
+    }
+  };
+
+  peerConnection.onconnectionstatechange = () => {
+    const s = peerConnection.connectionState;
+    if (s === 'connected') updateStatus(true);
+    if (s === 'disconnected' || s === 'failed') updateStatus(false);
+  };
+}
+
+async function initiateCall() {
+  if (!peerConnection) setupPeerConnection();
+  try {
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    await sendSignal({ type: 'offer', sdp: offer.sdp });
+  } catch(e) { console.error('Offer failed:', e); }
+}
+
+// ── STATUS ──
+function updateStatus(connected) {
+  isConnected = connected;
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  dot.className = 'status-dot ' + (connected ? 'connected' : 'waiting');
+  txt.textContent = connected ? 'Connected' : 'Waiting for peer…';
+}
+
+// ── MEDIA CONTROLS ──
+function toggleMic() {
+  micOn = !micOn;
+  if (localStream) localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  const btn = document.getElementById('micBtn');
+  btn.textContent = micOn ? '🎙️';
+  btn.innerHTML = (micOn ? '🎙️' : '🔇') + '<span>Mic</span>';
+  btn.classList.toggle('off', !micOn);
+}
+
+function toggleCam() {
+  camOn = !camOn;
+  if (localStream) localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  const btn = document.getElementById('camBtn');
+  btn.innerHTML = (camOn ? '📷' : '🚫') + '<span>Camera</span>';
+  btn.classList.toggle('off', !camOn);
+}
+
+// ── SPEECH RECOGNITION ──
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    document.getElementById('speechStatusText').textContent = 'Speech not supported in this browser';
+    return;
+  }
+  speechRecog = new SR();
+  speechRecog.continuous = true;
+  speechRecog.interimResults = true;
+  speechRecog.lang = 'en-US';
+
+  speechRecog.onstart = () => {
+    speechActive = true;
+    document.getElementById('speechBtn').classList.add('recording');
+    document.getElementById('speechBtn').innerHTML = '🎤<span>On</span>';
+    document.getElementById('speechStatusText').textContent = 'Listening…';
+    showMicWave(true);
+  };
+  speechRecog.onend = () => {
+    if (speechActive) speechRecog.start(); // keep alive
+  };
+  speechRecog.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    const display = final || interim;
+    displayCaption('listener', display, !!interim);
+    if (final) sendCaption('speech', final);
+  };
+  speechRecog.onerror = (e) => {
+    if (e.error !== 'no-speech') showToast('Speech error: ' + e.error);
+  };
+
+  // Auto-start
+  speechRecog.start();
+}
+
+function toggleSpeech() {
+  if (!speechRecog) return;
+  if (speechActive) {
+    speechActive = false;
+    speechRecog.stop();
+    document.getElementById('speechBtn').classList.remove('recording');
+    document.getElementById('speechBtn').innerHTML = '🎤<span>Speech</span>';
+    document.getElementById('speechStatusText').textContent = 'Paused';
+    showMicWave(false);
+  } else {
+    speechActive = true;
+    speechRecog.start();
+  }
+}
+
+function showMicWave(show) {
+  const el = document.getElementById('speechStatus');
+  if (show) {
+    el.innerHTML = `<div class="mic-wave"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div><span id="speechStatusText" style="font-size:12px;color:var(--muted)">Listening…</span>`;
+  } else {
+    el.innerHTML = `<span id="speechStatusText" style="font-size:12px;color:var(--muted)">Paused</span>`;
+  }
+}
+
+// ── SIGN DETECTION (simulated with demo phrases) ──
+const signPhrases = [
+  'Hello', 'Thank you', 'Please', 'Help me', 'Yes', 'No', 'Water', 'Food',
+  'How are you?', 'Good morning', 'I understand', 'Nice to meet you',
+  'I need help', 'What time is it?', 'See you later', 'Goodbye'
+];
+const signConfidences = [92, 87, 95, 78, 91, 88, 83, 96];
+let signerCaptionBuffer = '';
+let lastSignTime = 0;
+
+function startSignDetection() {
+  signDetectionActive = true;
+  document.getElementById('signDetectStatus').textContent = '🟢 Detection active';
+  document.getElementById('signBtn').innerHTML = '🤟<span>On</span>';
+  simulateSignDetection();
+}
+
+function simulateSignDetection() {
+  if (!signDetectionActive) return;
+  // Simulate a new sign every 3-7 seconds when camera is active
+  const delay = 3000 + Math.random() * 4000;
+  signDetectionInterval = setTimeout(() => {
+    if (signDetectionActive && camOn) {
+      const phrase = signPhrases[Math.floor(Math.random() * signPhrases.length)];
+      const conf = signConfidences[Math.floor(Math.random() * signConfidences.length)];
+      showSignOverlay(phrase, conf);
+      signerCaptionBuffer = (signerCaptionBuffer ? signerCaptionBuffer + ' ' : '') + phrase;
+      displayCaption('signer', signerCaptionBuffer, false);
+      sendCaption('sign', phrase);
+    }
+    simulateSignDetection();
+  }, delay);
+}
+
+function showSignOverlay(text, conf) {
+  const overlay = document.getElementById('signOverlay');
+  document.getElementById('signDetectedText').textContent = text;
+  document.getElementById('signConfidence').textContent = conf + '%';
+  overlay.style.display = 'flex';
+  clearTimeout(overlay._hideTimer);
+  overlay._hideTimer = setTimeout(() => overlay.style.display = 'none', 2500);
+}
+
+function toggleSignDetection() {
+  signDetectionActive = !signDetectionActive;
+  const btn = document.getElementById('signBtn');
+  if (signDetectionActive) {
+    btn.innerHTML = '🤟<span>On</span>';
+    btn.classList.remove('off');
+    document.getElementById('signDetectStatus').textContent = '🟢 Detection active';
+    simulateSignDetection();
+  } else {
+    clearTimeout(signDetectionInterval);
+    btn.innerHTML = '🤟<span>Off</span>';
+    btn.classList.add('off');
+    document.getElementById('signDetectStatus').textContent = 'Detection paused';
+    document.getElementById('signOverlay').style.display = 'none';
+  }
+}
+
+// ── CAPTIONS ──
+function displayCaption(panel, text, isInterim) {
+  const el = document.getElementById(panel === 'signer' ? 'signerCaption' : 'listenerCaption');
+  el.className = 'caption-text' + (isInterim ? ' listening' : '');
+  el.innerHTML = text + (isInterim ? '<span class="typing-cursor"></span>' : '');
+}
+
+async function sendCaption(type, text) {
+  await sendSignal({ type: 'caption', captionType: type, text });
+}
+
+// ── COPY ROOM CODE ──
+function copyRoomCode() {
+  navigator.clipboard.writeText(roomCode).then(() => showToast('Room code copied: ' + roomCode));
+}
+
+// ── LEAVE ──
+function leaveRoom() {
+  if (peerConnection) { peerConnection.close(); peerConnection = null; }
+  if (socket) { socket.close(); socket = null; }
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+  if (signDetectionInterval) clearTimeout(signDetectionInterval);
+  if (speechRecog) { speechActive = false; try { speechRecog.stop(); } catch(e){} }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  isConnected = false;
+  document.getElementById('room').style.display = 'none';
+  document.getElementById('landing').style.display = 'flex';
+  // Reset
+  document.getElementById('signerVideo').srcObject = null;
+  document.getElementById('listenerVideo').srcObject = null;
+  document.getElementById('signerPlaceholder').style.display = 'flex';
+  document.getElementById('listenerPlaceholder').style.display = 'flex';
+  document.getElementById('signerCaption').textContent = 'Sign language translation will appear here…';
+  document.getElementById('listenerCaption').textContent = 'Speech transcription will appear here…';
+  signerCaptionBuffer = '';
+}
+
+// ── TOAST ──
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
